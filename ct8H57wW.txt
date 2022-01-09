@@ -1,0 +1,75 @@
+local rs = game:GetService('RunService')
+local plrs = game:GetService('Players')
+local lp = plrs.LocalPlayer
+
+game.workspace.Winners["Winners"].Name = "GameThing"
+for i,v in pairs(getconnections(game.workspace:WaitForChild("Guess"):WaitForChild("2"):WaitForChild("1"):GetPropertyChangedSignal("BrickColor")))do v:Disable() end
+for i,v in pairs(getconnections(game.workspace:WaitForChild("Guess"):WaitForChild("2"):WaitForChild("2"):GetPropertyChangedSignal("BrickColor")))do v:Disable() end
+
+local function getPlayer(part)
+   if part.Parent:FindFirstChildOfClass('Humanoid') then
+       return plrs:GetPlayerFromCharacter(part.Parent)
+   end
+   if part.Parent.Parent:FindFirstChildOfClass('Humanoid') then
+       return plrs:GetPlayerFromCharacter(part.Parent.Parent)
+   end
+   if part.Parent.Parent.Parent:FindFirstChildOfClass('Humanoid') then
+       return plrs:GetPlayerFromCharacter(part.Parent.Parent.Parent)
+   end
+   if part.Parent.Parent.Parent.Parent:FindFirstChildOfClass('Humanoid') then
+       return plrs:GetPlayerFromCharacter(part.Parent.Parent.Parent.Parent)
+   end
+end
+
+local colorData = {}
+for i,v in pairs(workspace.Guess:GetChildren()) do
+   local one, two = v:FindFirstChild('1'), v:FindFirstChild('2')
+   colorData[v] = {
+       one,
+       two,
+       0,
+       0
+   }
+   local ourData = colorData[v]
+   one.Touched:Connect(function(part)
+       local plr = getPlayer(part)
+       local char = plr.Character
+       local hum = char:FindFirstChildOfClass('Humanoid')
+
+       if hum.Health > 0 then
+           local start = os.clock()
+           repeat
+               wait()
+           until os.clock() - start > .8 or hum == nil or (hum ~= nil and hum.Health < 0) or char.Parent == nil
+
+           local right = hum == nil or (hum ~= nil and hum.Health <= 0) or char.Parent == nil
+           ourData[right and 4 or 3] = ourData[right and 4 or 3] + 1
+       end
+   end)
+   two.Touched:Connect(function(part)
+       local plr = getPlayer(part)
+       local char = plr.Character
+       local hum = char:FindFirstChildOfClass('Humanoid')
+
+       if hum.Health > 0 then
+           local start = os.clock()
+           repeat
+               wait()
+           until os.clock() - start > .8 or hum == nil or (hum ~= nil and hum.Health < 0) or char.Parent == nil
+
+           local left = hum == nil or (hum ~= nil and hum.Health <= 0) or char.Parent == nil
+           ourData[left and 3 or 4] = ourData[left and 3 or 4] + 1
+       end
+   end)
+end
+
+rs.Stepped:Connect(function()
+   for i,v in pairs(colorData) do
+       local left, right = v[3], v[4]
+       if left > 0 or right > 0 then
+           local ans = right > left
+           v[1].Color = Color3.new(ans and 1 or 0, ans and 0 or 1, 0)
+           v[2].Color = Color3.new(ans and 0 or 1, ans and 1 or 0, 0)
+       end
+   end
+end)
